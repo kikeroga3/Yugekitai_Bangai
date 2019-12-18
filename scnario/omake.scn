@@ -1,0 +1,188 @@
+@SAV ‚¨‚Ü‚¯
+
+*Omake_Start
+
+@SND OFF
+
+@GRP logo.png
+@SEL *Opn ‚PDƒQ[ƒ€‚ÌŠJŽn‚É–ß‚é
+@SEL *BGM ‚QD‚a‚f‚l‚ð’®‚­i‘S‚R‚O‹Èj
+@SEL *Yokoku ‚RDŽŸ‰ñ—\
+@SEL *Suzuki ‚SD‚o—é–Øƒoƒgƒ‹
+@INP
+
+*Yokoku
+@SCN trailer.scn
+
+*Suzuki
+@SND bgm28.mp3
+@ACT szk
+@JMP *Omake_Start
+
+*BGM
+
+@SND bgm01.mp3
+‚O‚P^‚R‚Q
+˜c‚ß‚ç‚ê‚½_˜b
+@INP
+
+@SND bgm02.mp3
+‚O‚Q^‚R‚Q
+_•æ
+@INP
+
+@SND bgm04.mp3
+‚O‚R^‚R‚Q
+‚s‚g‚d‚l‚d
+@INP
+
+@SND bgm05.mp3
+‚O‚S^‚R‚Q
+‚y‚d‚o‚o‚d‚s‚r‚Ì‰‰‘tEg‚c‚n‚mf‚s@‚a‚k‚n‚v@‚h‚sh
+@INP
+
+@SND bgm06.mp3
+‚O‚T^‚R‚Q
+‚tŒ‘à‚Ì‰‰‘tEgPŒ‚‚ÌƒTƒCƒo[ƒWƒƒƒ“ƒNƒVƒ‡ƒ“h
+@INP
+
+@SND bgm07.mp3
+‚O‚U^‚R‚Q
+–³l‚ÌZŽÉ
+@INP
+
+@SND bgm09.mp3
+‚O‚V^‚R‚Q
+V•·•”‚ÌƒPƒ“‚¿‚á‚ñ
+@INP
+
+@SND bgm11.mp3
+‚O‚W^‚R‚Q
+˜Vl‚ÌUŒ‚@|‚`‚”‚”‚‚ƒ‚‹@‚”‚ˆ‚…@‚n‚Œ‚„‚‚‚Ž|
+@INP
+
+@SND bgm12.mp3
+‚O‚X^‚R‚Q
+’²¸@|‚P
+@INP
+
+@SND bgm13.mp3
+‚P‚O^‚R‚Q
+ˆÃ‚«—I‹v
+@INP
+
+@SND bgm14.mp3
+‚P‚P^‚R‚Q
+’²¸@|‚Q
+@INP
+
+@SND bgm15.mp3
+‚P‚Q^‚R‚Q
+Ž×ˆ«‚Ì”é–ä
+@INP
+
+@SND bgm16.mp3
+‚P‚R^‚R‚Q
+ˆÅ‚Ì—Í
+@INP
+
+@SND bgm17.mp3
+‚P‚S^‚R‚Q
+‘¾—z‰¼–Ê‚Ì¢ŠE
+@INP
+
+@SND bgm18.mp3
+‚P‚T^‚R‚Q
+‘¾—z‚ÌíŽm
+@INP
+
+@SND bgm03.mp3
+‚P‚U^‚R‚Q
+Ž×_’”q
+@INP
+
+@SND bgm19.mp3
+‚P‚V^‚R‚Q
+ŒºŠC–íŒŽ‚Ìƒe[ƒ}@|‚f‚‰‚’‚Œ@‚‰‚Ž@‚e‚‚’‚…‚“‚”|
+@INP
+
+@SND bgm20.mp3
+‚P‚W^‚R‚Q
+‚`‚q‚`‚h@‚g‚n‚t‚r‚d
+@INP
+
+@SND bgm21.mp3
+‚P‚X^‚R‚Q
+Žô‚í‚ê‚½‹óŠÔ
+@INP
+
+@SND bgm23.mp3
+‚Q‚O^‚R‚Q
+ƒ}ƒTƒ€ƒlEƒtƒ@ƒCƒg
+@|‚s‚ˆ‚…@‚a‚Œ‚‚„‚…@‚‚†@‚l‚‚“‚‚‚•‚Ž‚…|
+@INP
+
+@SND bgm25.mp3
+‚Q‚P^‚R‚Q
+ˆâÕ
+@INP
+
+@SND bgm26.mp3
+‚Q‚Q^‚R‚Q
+“ú•é‚ê
+@INP
+
+@SND bgm27.mp3
+‚Q‚R^‚R‚Q
+rƒm‰¤“`à
+@INP
+
+@SND bgm28.mp3
+‚Q‚S^‚R‚Q
+‹¥ŒE— œ–@
+@INP
+
+@SND bgm40.mp3
+‚Q‚T^‚R‚Q
+ˆÀ–ØE’{¶ô@|‚a‚n‚c‚x@‚`‚d‚f‚h‚r|
+@INP
+
+@SND bgm29.mp3
+‚Q‚U^‚R‚Q
+Ô‚¢Šá@|‚q‚d‚c@‚d‚x‚d‚r|
+@INP
+
+@SND bgm30.mp3
+‚Q‚V^‚R‚Q
+ÅŒã‚Ìƒ}ƒTƒ€ƒl
+@INP
+
+@SND bgm32.mp3
+‚Q‚W^‚R‚Q
+—VŒ‚‘àEŸ—˜‚Ìƒe[ƒ}
+@INP
+
+@SND bgm34.mp3
+‚Q‚X^‚R‚Q
+ˆ¤‚Ìƒe[ƒ}
+@INP
+
+@SND bgm35.mp3
+‚R‚O^‚R‚Q
+‹AŠÒ@|‚q‚d‚s‚t‚q‚m|
+@INP
+
+@SND bgm36.mp3
+‚R‚P^‚R‚Q
+‚d‚m‚c@‚s‚h‚s‚k‚d
+@INP
+
+@SND bgm37.mp3
+‚R‚Q^‚R‚Q
+‚m‚d‚w‚s@‚l‚n‚q‚m‚h‚m‚f
+@INP
+
+@JMP *Omake_Start
+
+*Opn
+

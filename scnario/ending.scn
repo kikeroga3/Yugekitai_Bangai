@@ -1,0 +1,29 @@
+
+@GRP gcls.png
+@SND ending.mp3
+
+@GRP ygb120.png
+
+@ACT roll endroll_ja.ini
+
+@GRP gcls.png
+@TIM 220
+
+@SND OFF
+
+　　　　　　　　　　　　　　　太平洋の赤い神風
+　
+　　　　　　　　　　　　　　　　　　　　―完―
+@INP
+
+@GRP logo.png
+@SEL *Opn １．最初に戻る
+@SEL *Omk ２．オマケモード
+@INP
+
+*Omk
+@SCN omake.scn
+
+*Opn
+
+
