@@ -1,0 +1,443 @@
+#packopt name "vc3"
+#packopt xsize 480		; 横サイズ
+#packopt ysize 320		; 縦サイズ
+
+#include "hsp3dish.as"
+#include "mod_smart.as"
+#include "mod_knjput.as"
+#include "mod_act.hsp"
+	;
+	;	Smart Scnario Engine
+	;	ViChap3
+	;	Created by TURNIP-WORKS
+
+*reset
+	smart_init
+	smart_add :act_num_drag=stat
+
+	fsz=20
+	celload "font_knj20.png",3
+	celdiv 3,fsz,fsz
+	celload "font_eng15x20.png",4
+	celdiv 4,15,fsz
+
+	sdim svd,4096
+	sdim svfn,1024
+	sdim scfn,1024
+	sdim txbf,256000
+	sdim lns,1024
+	sdim msg,1024
+	sdim s,256
+	sdim vs,256,16
+	sdim moj,256,16
+	dim jp,16
+	dim fl,66
+
+;▽遊撃隊１専用の特殊用途フラグ
+;フラグ65: 変数egl保持
+;フラグ64: アクションゲームの勝敗結果が返る
+
+	;画面サイズ取得
+	notesel txbf
+	noteload "vc3.ini"
+	noteget s,0 :wxs=int(s)
+	noteget s,1 :wys=int(s)
+	noteget s,2 :pys=int(s)
+	screen 0,wxs,wys
+	jy=pys+(fsz/2) :gx2=wxs/2 :dv=(wys-jy)/fsz
+
+	svfn="svdat"
+	pg=0 :slc=0 :x=fsz/2 :y=jy :ino=0
+
+	randomize
+
+	exist svfn
+	if strsize>0 {
+		celload "logo.png",2
+		ino=0
+		repeat
+			redraw 0
+			gosub *reput
+			;選択肢をクリックでループを抜ける
+			await 1
+			drag=smart_drag(act_num_drag,0,jy,wxs,jy+fsz*2,1)
+			if drag=1 {
+				mx=mousex :my=mousey
+				ino=(my-jy)/fsz :ino=abs(ino\2)
+			}
+			;選択部分表示
+			if drag :yy=fsz*ino+jy :boxsel 0,yy,wxs,fsz,0
+			;選択肢表示
+			gmode 2 :jx=(wxs-(fsz*8))/2
+			pos jx,jy :knjput "Ｃｏｎｔｉｎｕｅ",0
+			pos jx,jy+fsz :knjput "Ｎｅｗ　Ｇａｍｅ",0
+			redraw 1
+
+			;決定
+			if drag=2 :await 50 :break
+		loop
+		if ino=0 :gosub *sv_red :goto *start
+	}
+
+	scfn="open.scn" :pg=0
+	repeat 66 :fl(cnt)=0 :loop
+
+*start
+	notesel txbf
+	noteload scfn
+
+	redraw 0
+	color 0,0,0 :boxf
+
+*main
+		noteget lns,pg :pg+
+		if pg>notemax :goto *reset
+		repeat 16 :vs(cnt)="" :loop
+
+;		split lns," ",vs
+		i=0
+		repeat 16
+			getstr vs(cnt),lns,i,' ' :i+=strsize
+		loop
+
+		cmd=vs(0)
+
+		if cmd="@SCN" :scfn=vs(1) :pg=0 :goto *start
+		if cmd="@GRP" :gosub *grp
+		if cmd="@GCP" :gosub *gcp
+		if cmd="@GFD" :gosub *gfd
+		if cmd="@ROL" :gosub *rol
+		if cmd="@SEL" :gosub *sel
+		if cmd="@INP" :gosub *inp
+		if cmd="@JMP" :gosub *jmp
+		if cmd="@JSB" :ret=pg :gosub *jmp
+		if cmd="@RET" :pg=ret
+		if cmd="@LOP" :gosub *lop
+		if cmd="@TIM" :gosub *tim
+		if cmd="@FLG" :gosub *flg
+		if cmd="@RND" :gosub *rand
+		if cmd="@SND" :gosub *snd
+		if cmd="@SAV" :gosub *sv_wrt
+		if cmd="@ENG" :gosub *eng
+		if cmd="@ACT" :gosub *act
+
+		;文章表示
+		if lns!"" { a=peek(cmd,0)
+			if a!'@' and a!'*' and a!';' {
+				gmode 2 :pos x,y :knjput lns,egl :y+=fsz
+			}
+		}
+
+	goto *main
+
+stop
+
+*flexck
+;ファイル存在チェック
+	exist vs(1)
+	if strsize<1 :title scfn+":"+pg+" nothing "+vs(1)
+	return
+
+*grp
+;@GRP filename
+	gosub *flexck :if strsize<1 :return
+	celload vs(1),2
+	celdiv 2,wxs,pys
+	redraw 0
+	gosub *reput
+	return
+
+*gcp
+;@GCP xs ys sx sy dx dy
+;@GCP PicNo.
+	gxs=int(vs(1)) :gys=int(vs(2))
+	sx=int(vs(3)) :sy=int(vs(4))
+	dx=int(vs(5)) :dy=int(vs(6))
+	gmode 0 :pos dx,dy
+	if gys>0 {
+		gcopy 2,sx,sy,gxs,gys
+	} else {
+		;第2パラメタがないときは画像No.指定処理
+		celdiv 2,wxs,pys :celput 2,gxs
+	}
+	return
+
+*rol
+;@ROL sx sy Up|Down|Left|Right dot cnt wait
+	sx=int(vs(1)) :sy=int(vs(2))
+	a=peek((vs(3)),0)
+	d=int(vs(4)) :l=int(vs(5)) :w=int(vs(6))
+	gmode 0 :pos 0,0
+	repeat l
+		redraw 0
+		color 0,0,0 :boxf
+		if a='D' :sy+=d
+		if a='U' :sy-=d
+		if a='R' :sx+=d
+		if a='L' :sx-=d
+		gcopy 2,sx,sy,wxs,pys
+		redraw 1
+		await 10*w+1
+	loop
+	return
+
+*gfd
+;@GFD In|Out wait
+	a=peek((vs(1)),0) :w=int(vs(2))
+	color 0,0,0
+	repeat 32
+		redraw 0 :boxf
+		if a='I' :b=7+cnt*8 :else :b=255-cnt*8
+		gmode 3,wxs,pys,b :pos 0,0 :gcopy 2,0,0
+		await 10*w+1
+		redraw 1
+	loop
+	return
+
+*sel
+;@SEL lavel string
+	jp(slc)=vs(1)
+	moj(slc)=vs(2)
+	slc+
+	return
+
+*inp
+;@INP
+	;選択肢なしの入力処理
+	if slc=0 {
+		pos wxs-fsz,wys-fsz :knjput "▽",0
+		redraw 1
+		repeat
+			await 1
+			drag=smart_drag(act_num_drag,0,0,wxs,wys,1)
+			if drag=2 :break
+		loop
+		redraw 0
+		gosub *reput
+		return
+	}
+	;選択肢ありの入力処理
+	ino=0
+	repeat
+		redraw 0
+		gosub *reput
+		;選択肢をクリックでジャンプ
+		await 1
+		drag=smart_drag(act_num_drag,0,jy,wxs,jy+fsz*dv,1)
+		if drag=1 {
+			mx=mousex :my=mousey
+			mx=mx/gx2 :my=(my-jy)/fsz
+			repeat slc
+				if mx=cnt/dv and my=cnt\dv :ino=cnt :break
+			loop
+		}
+		;選択部分表示
+		if drag {
+			xx=gx2*(ino/dv)+x :yy=fsz*(ino\dv)+y
+			boxsel xx,yy,gx2,fsz,1
+		}
+		;選択肢表示
+		repeat slc
+			gmode 2 :pos gx2*(cnt/dv)+x,fsz*(cnt\dv)+y
+			msg=moj(cnt) :knjput msg,egl
+		loop
+		redraw 1
+		;決定
+		if drag=2 { await 50
+			vs(1)=jp(ino) :gosub *jmp
+			break
+		}
+	loop
+	redraw 0
+	gosub *reput
+	slc=0
+	return
+
+*jmp
+;@JMP lavel
+	repeat notemax
+		noteget lns,cnt
+		if lns=vs(1) :pg=cnt :break
+	loop
+	return
+
+*lop
+;@REP lavel cnt
+	if vs(2)="" {
+		;第2パラメタがないときは入力待ちループ
+		await 1 :stick ky
+		if ky=0 :gosub *jmp
+	} else {
+		;第2パラメタがあるときはcnt数ループ
+		rpc-
+		if rpc<0 :rpc=int(vs(2))
+		if rpc>0 :gosub *jmp
+	}
+	return
+
+*tim
+;@TIM msec
+	a=int(vs(1))
+	redraw 1 :await 10*a+1
+	redraw 0 :gosub *reput
+	return
+
+*flg
+;@FLG flgno val
+;@FLG flgno val lavel
+	n=int(vs(1)) :v=int(vs(2))
+	;フラグ±
+	if vs(2)="+" :fl(n)+ :return
+	if vs(2)="-" { fl(n)-
+		if fl(n)<0 :fl(n)=0
+		return
+	}
+	;第3パラメタがないときは代入
+	if vs(3)="" :fl(n)=v :return
+	;第3パラメタがあるときは判定ジャンプ
+	a=0
+	; 指定値より大きい
+	if instr(vs(2),1,"+")!-1 { a=1
+		if fl(n)>v :vs(1)=vs(3) :gosub *jmp
+	}
+	; 指定値より小さい
+	if instr(vs(2),1,"-")!-1 { a=2
+		if fl(n)<v :vs(1)=vs(3) :gosub *jmp
+	}
+	; 指定値とイコール
+	if a=0 and fl(n)=v :vs(1)=vs(3) :gosub *jmp
+	return
+
+*rand
+;@RND flgno val
+	n=int(vs(1)) :v=int(vs(2))
+	fl(n)=rnd(v) :return
+
+*snd
+;@SND filename
+;@SND OFF
+	if vs(1)="OFF" :mmstop :return
+	gosub *flexck :if strsize<1 :return
+	if instr(vs(1),0,".wav")>0 {
+		;WAVなら通常再生
+		mmload vs(1),0 :mmplay 0
+	} else {
+		;それ以外は無限ループ再生
+		mmload vs(1),1,1 :mmplay 1
+	}
+	return
+
+*eng
+;@ENG mode(0|1)
+	egl=int(vs(1))
+	return
+
+*act
+;@ACT name
+	if vs(1)="game" :act_game fl(64),vs(2)
+	if vs(1)="roll" :act_roll egl,vs(2)
+	notesel txbf
+	redraw 0 :gosub *reput
+	return
+
+*reput
+;画像再描画
+	color 0,0,0 :boxf
+	gmode 5,,,255 :pos 0,0:celput 2
+	y=jy :return
+
+*sv_red
+;セーブデータ読み込み
+	notesel svd :noteload svfn
+	slc=notemax/2
+	repeat slc
+		;セーブポイント名取得
+		noteget lns,cnt*2
+		i=instr(lns,0,",")+1
+		i+=instr(lns,i,",")+1
+		getstr moj(cnt),lns,i
+		;和英フラグ取得
+		noteget lns,cnt*2+1
+		vs(cnt)=strmid(lns,-1,2)
+	loop
+	;セーブデータ選択
+	ino=0
+	repeat
+		redraw 0
+		gosub *reput
+		;選択肢をクリックでジャンプ
+		await 1
+		drag=smart_drag(act_num_drag,0,jy,wxs,jy+fsz*dv,1)
+		if drag=1 {
+			mx=mousex :my=mousey
+			mx=mx/gx2 :my=(my-jy)/fsz
+			repeat slc
+				if mx=cnt/dv and my=cnt\dv :ino=cnt :break
+			loop
+		}
+		;選択部分表示
+		if drag {
+			xx=gx2*(ino/dv)+x :yy=fsz*(ino\dv)+y
+			boxsel xx,yy,gx2,fsz,1
+		}
+		;選択肢表示
+		repeat slc
+			gmode 2 :xx=gx2*(cnt/dv)+x :yy=fsz*(cnt\dv)+y
+			pos xx,yy :getstr msg,moj(cnt),0,':' :i=strsize :egl=1 :knjput msg,egl
+			pos xx+140,yy :getstr msg,moj(cnt),i :egl=int(vs(cnt)) :knjput msg,egl
+		loop
+		redraw 1
+
+		;決定No.のセーブデータを読み込む
+		if drag=2 { await 50
+			noteget lns,ino*2
+			getstr scfn,lns,0,',' :i=strsize
+			getstr s,lns,i,',' :pg=int(s)
+			noteget lns,ino*2+1 :i=0
+			repeat 66
+				getstr s,lns,i,',' :i+=strsize
+				fl(cnt)=int(s)
+			loop
+			egl=fl(65)
+			break
+		}
+	loop
+	redraw 0
+	gosub *reput
+	slc=0
+	return
+
+*sv_wrt
+;セーブデータ書き込み
+	notesel svd :exist svfn
+	if strsize>0 :noteload svfn
+	md_hm=strf("%04d",gettime(1)*100+gettime(3))+"_"+strf("%04d",gettime(4)*100+gettime(5))+":"
+	lns=scfn+","+pg+","+md_hm+vs(1)
+	noteadd lns,0
+	fl(65)=egl :lns=""
+	repeat 66 :lns=lns+fl(cnt)+"," :loop
+	noteadd lns,1
+
+	; 余分な行を削除
+	repeat dv*2
+		if notemax>dv*4 :notedel dv*4 :else :break
+	loop
+
+	notesave svfn
+	notesel txbf
+	return
+
+#deffunc boxsel int bsx,int bsy,int bsxs,int bsys,int bsw
+; 選択肢グラデ表示
+
+	if bsw { rxs=bsxs/32
+		repeat 32
+			color 32-cnt,64-2*cnt,160-5*cnt
+			boxf bsx+rxs*cnt,bsy,bsx+bsxs,bsy+bsys
+		loop
+	} else {
+		color 32,64,160
+		boxf bsx,bsy,bsx+bsxs,bsy+bsys
+	}
+	return
+

@@ -1,0 +1,254 @@
+#module
+
+;EndRoll
+#deffunc act_roll var eg,str fnm
+
+	sdim buf,4096
+	sdim ls,256
+	sdim fn,256
+
+	wxs=480 :wys=320 :en=eg :fn=fnm
+	fys=20 :fxs=20-5*en
+
+	notesel buf
+	noteload fn
+
+	;cn=１画面表示行数
+	;pi=エンドロールデータの読込み開始行
+	cn=wys/fys+3 :pi=0		
+
+*main_roll
+	repeat fys :y=cnt
+		redraw 0
+		;背景画像コピー
+		gmode 0 :pos 0,0 :gcopy 2,0,0,wxs,wys
+		gmode 2
+		;エンドロール表示
+		repeat cn
+			noteget ls,pi+cnt
+			ln=strlen(ls) :if en=0 :ln=ln/2
+			x=(wxs-fxs*ln)/2
+			pos x,-y+fys*cnt :knjput ls,en
+		loop
+		await 50
+	loop
+
+	redraw 1
+	pi+ :if ls!"@END" :goto *main_roll
+
+	return
+
+;アクションゲーム
+#deffunc act_game var ret,str inm
+
+	wxs=480 :wys=320
+
+	mds=256
+	dim anm_max,mds
+	dim anm_pat,mds,256
+	dim mov_max,mds
+	dim mov_pat,mds,256
+	dim area,mds,4
+	dim wsw,mds
+	dim lfc,mds
+
+	obs=256
+	dim omd,obs
+	dim olf,obs
+	dim oan,obs
+	dim ofl,obs
+	dim omv,obs
+	dim odx,obs
+	dim ody,obs
+
+	sdim txbf,64000
+	sdim lns,1024
+	sdim vs,16,256
+	sdim ini_nm,32
+
+	ini_nm=inm :gosub *ini_rd
+
+	celdiv 1,48,48,24,24
+
+*main
+	redraw 0
+	;背景画像コピー
+	gmode 0 :pos 0,0 :gcopy 2,0,0,wxs,wys
+	;オブジェクトを動かし表示
+	gmode 2 :gosub *objmov
+
+	stick ky
+	if ky=256 :title "Click END!" :return
+
+	if ini_nm="robo1" :gosub *robo
+;	if ini_nm="robo2" :gosub *robo
+;	if ini_nm="tomi" :gosub *robo
+;	if ini_nm="ken" :gosub *robo
+;	if ini_nm="carx" :gosub *robo
+;	if ini_nm="nemo" :gosub *robo
+;	if ini_nm="nautilus" :gosub *robo
+;	if ini_nm="szk" :gosub *robo
+
+
+	o=0 :m=4 :dis=24 :gosub *obcoli
+	if ret>-1 :title "coli_obj="+ret
+
+	await 33*2
+	redraw 1
+	goto *main
+
+*robo
+;Model0:アイドリング
+;Model1:走る
+;Model2:アタック
+	dx=mousex-ox(0) :dy=mousey-oy(0)
+	ox(0)+=(dx/8) :oy(0)+=(dy/8)
+
+	if abs(dx)>9 or abs(dy)>9 {
+		if omd(0)!1 :dsh=1 :o=0 :m=1 :gosub *obsetmd	;走るモデルをセット
+	} else {
+		if omd(0)!2 and dsh=1 :dsh=0 :atk=anm_max(2)+1 :o=0 :m=2 :gosub *obsetmd	;アタックモデルをセット
+		if atk>0 { atk-
+			if atk=0 {
+				o=0 :m=0 :gosub *obsetmd			;ショット＆アイドリングをセット
+				gosub *obsrch :ox(o)=ox(0) :oy(o)=oy(0) :m=3 :gosub *obsetmd
+				
+			}
+		}
+	}
+
+	return
+
+*ini_rd
+; ac_xxx.ini 読込み
+	notesel txbf :noteload "act_"+ini_nm+".ini"
+
+	no=0 :mdn=0 :obn=0
+	repeat notemax
+		noteget lns,no :no+
+
+		if lns="[PicData]" {
+			repeat 10 :c=cnt
+				noteget lns,no :no+
+				if lns!"" :celload lns,1+c :else :break
+			loop
+		}
+
+		if lns="[WavData]" {
+			repeat 10 :c=cnt
+				noteget lns,no :no+
+				if lns!"" :	mmload lns,2+c :else :break
+			loop
+		}
+
+		if lns="[MdlData]" {
+
+			;Animation Pattern
+			noteget lns,no :no+ :gosub *lnsdiv
+			anm_max(mdn)=c
+			repeat c
+				anm_pat(mdn,cnt)=int(vs(cnt))
+			loop
+
+			;Move Direction
+			noteget lns,no :no+ :gosub *lnsdiv
+			mov_max(mdn)=c/2
+			repeat c
+				mov_pat(mdn,cnt)=int(vs(cnt))
+			loop
+
+			;Area(sx,sy,xs,ys), Wall_sw, LifeCnt
+			noteget lns,no :no+ :gosub *lnsdiv
+			repeat 4
+				area(mdn,cnt)=int(vs(cnt))
+			loop
+			wsw(mdn)=int(vs(4))
+			lfc(mdn)=int(vs(5))
+
+			mdn+
+		}
+
+		if lns="[ObjData]" {
+			noteget lns,no :no+ :gosub *lnsdiv
+			o=obn :m=int(vs(0)) :gosub *obsetmd
+			ox(obn)=int(vs(1)) :oy(obn)=int(vs(2))
+			obn+
+		}
+
+	loop
+	return
+
+*lnsdiv
+	i=0 :c=0
+	repeat 256
+		getstr vs(cnt),lns,i,',' :if strsize=0 :break
+		i+=strsize :c+
+	loop
+	return
+
+*obsetmd
+;オブジェクトにモデルをセット
+	;omd=MdlNo olf=LifeCnt omv=MovCnt oan=AnmCnt ofl=ObjFlg (odx,ody)=WallReflect
+	omd(o)=m :olf(o)=lfc(m) :omv(o)=0 :oan(o)=0 :ofl(o)=1 :odx(o)=1 :ody(o)=1
+	return
+
+*objmov
+;オブジェクトを動かす
+	repeat obs
+		if ofl(cnt) { m=omd(cnt)
+			pos ox(cnt),oy(cnt) :celput 1,anm_pat(m,oan(cnt))
+			c=omv(cnt)
+			ox(cnt)+=mov_pat(m,c*2)*odx(cnt) :oy(cnt)+=mov_pat(m,c*2+1)*ody(cnt)
+			omv(cnt)=(c+1)\mov_max(m)
+			oan(cnt)=(oan(cnt)+1)\anm_max(m)
+
+			;壁衝突チェック
+			if ox(cnt)<area(m,0) {
+				if wsw(m)=0 :ofl(cnt)=0
+				if wsw(m)=1 :ox(cnt)=area(m,0)
+				if wsw(m)=2 :odx(cnt)=-odx(cnt)
+			}
+			if oy(cnt)<area(m,1) {
+				if wsw(m)=0 :ofl(cnt)=0
+				if wsw(m)=1 :oy(cnt)=area(m,1)
+				if wsw(m)=2 :ody(cnt)=-ody(cnt)
+			}
+			if ox(cnt)>area(m,2) {
+				if wsw(m)=0 :ofl(cnt)=0
+				if wsw(m)=1 :ox(cnt)=area(m,2)
+				if wsw(m)=2 :odx(cnt)=-odx(cnt)
+			}
+			if oy(cnt)>area(m,3) {
+				if wsw(m)=0 :ofl(cnt)=0
+				if wsw(m)=1 :oy(cnt)=area(m,3)
+				if wsw(m)=2 :ody(cnt)=-ody(cnt)
+			}
+
+			;LifeCntチェック(1以上なら減算し、0になったら無効化)
+			if lfc(m)>0 { olf(cnt)-
+				if olf(cnt)<1 :ofl(cnt)=0
+			}
+		}
+	loop
+	return
+
+*obsrch
+;空いてるオブジェクトIDを返す
+	o=-1
+	repeat obs
+		if ofl(cnt)=0 :o=cnt :break
+	loop
+	return
+
+*obcoli
+; オブジェクト衝突判定(o=対象ObjNo, m=対象MdlNo, dis=判定距離, ret=衝突しているObjNo)
+	ret=-1
+	repeat obs
+		if ofl(cnt) and omd(cnt)=m and o!cnt {
+			if abs(ox(o)-ox(cnt))<dis and abs(oy(o)-oy(cnt))<dis :ret=cnt :break
+		}
+	loop
+	return
+
+#global
+
